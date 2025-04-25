@@ -5,7 +5,7 @@ function App() {
     <>
       <div>
         <h1>Welcome to SkavaAir : always stay ahead of your deadline..</h1>
-        <h3>omg..</h3>
+        <h3>I am good to travel..</h3>
       </div>
     </>
   );
