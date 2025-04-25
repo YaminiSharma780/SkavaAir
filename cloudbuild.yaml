@@ -12,19 +12,19 @@ steps:
 
   # Build frontend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'europe-north1-docker.pkg.dev/skavaair/skavaair-frontend/frontend:latest', './frontend']
+    args: ['build', '-t', 'europe-north1-docker.pkg.dev/skavaair/frontend:latest', './frontend']
 
   # Build backend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'europe-north1-docker.pkg.dev/skavaair/skavaair-backend/backend:latest', './backend']
+    args: ['build', '-t', 'europe-north1-docker.pkg.dev/skavaair/backend:latest', './backend']
 
   # Push frontend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-north1-docker.pkg.dev/skavaair/skavaair-frontend/frontend:latest']
+    args: ['push', 'europe-north1-docker.pkg.dev/skavaair/frontend:latest']
 
   # Push backend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-north1-docker.pkg.dev/skavaair/skavaair-backend/backend:latest']
+    args: ['push', 'europe-north1-docker.pkg.dev/skavaair/backend:latest']
 
   # Set up kubectl with GKE credentials
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -41,5 +41,5 @@ steps:
     args: ['apply', '-f', 'k8s/']
 
 images:
-  - europe-north1-docker.pkg.dev/skavaair/skavaair-frontend/frontend:latest
-  - europe-north1-docker.pkg.dev/skavaair/skavaair-backend/backend:latest
+  - europe-north1-docker.pkg.dev/skavaair/frontend:latest
+  - europe-north1-docker.pkg.dev/skavaair/backend:latest
