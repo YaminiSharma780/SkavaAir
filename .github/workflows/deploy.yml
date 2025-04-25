@@ -3,7 +3,7 @@ name: Deploy to GKE
 on:
   push:
     branches:
-      - master
+      - master  # Trigger on pushes to master branch (you can change this if necessary)
 
 jobs:
   deploy:
@@ -16,12 +16,21 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: skavaair
-          credentials_json: ${{ secrets.GCP_SA_NEW_KEY }}
+          project_id: skavaair  # Your Google Cloud project ID
+          credentials_json: ${{ secrets.GCP_SA_NEW_KEY }}  # Your service account key stored in GitHub secrets
 
       - name: Install gke-gcloud-auth-plugin
         run: |
-          gcloud components install gke-gcloud-auth-plugin
+          gcloud components install gke-gcloud-auth-plugin || true
+
+      - name: Debug GCP Service Account Key (temporary step)
+        run: echo "${{ secrets.GCP_SA_NEW_KEY }}" | head -n 10  # Show first 10 lines for debugging (remove later)
+
+      - name: Authenticate with gcloud using the service account key
+        run: |
+          echo "${{ secrets.GCP_SA_NEW_KEY }}" > /tmp/gcp-key.json
+          cat /tmp/gcp-key.json  # Temporary check to verify key file
+          gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
 
       - name: Get GKE credentials
         run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
@@ -33,6 +42,4 @@ jobs:
         run: kubectl apply -f k8s/backend-deployment.yaml
 
       - name: Expose services
-        run: |
-          kubectl apply -f k8s/frontend-service.yaml
-          kubectl apply -f k8s/backend-service.yaml
+        run: kubectl apply -f k8s/frontend-service.yaml && kubectl apply -f k8s/backend-service.yaml
