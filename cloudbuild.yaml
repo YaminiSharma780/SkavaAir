@@ -2,21 +2,29 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
+  # Authenticate Docker with Artifact Registry
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud auth configure-docker europe-north1-docker.pkg.dev
+
   # Build frontend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/analog-vault-398008/frontend:latest', './frontend']
+    args: ['build', '-t', 'europe-north1-docker.pkg.dev/skavaair/skavaair-frontend/frontend:latest', './frontend']
 
   # Build backend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/analog-vault-398008/backend:latest', './backend']
+    args: ['build', '-t', 'europe-north1-docker.pkg.dev/skavaair/skavaair-backend/backend:latest', './backend']
 
   # Push frontend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/analog-vault-398008/frontend:latest']
+    args: ['push', 'europe-north1-docker.pkg.dev/skavaair/skavaair-frontend/frontend:latest']
 
   # Push backend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/analog-vault-398008/backend:latest']
+    args: ['push', 'europe-north1-docker.pkg.dev/skavaair/skavaair-backend/backend:latest']
 
   # Set up kubectl with GKE credentials
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -24,14 +32,14 @@ steps:
     args:
       - '-c'
       - |
-        gcloud container clusters get-credentials skavaair-cluster \
+        gcloud container clusters get-credentials skavaair-kube-cluster \
           --region europe-north1 \
-          --project analog-vault-398008
+          --project skavaair
 
   # Deploy Kubernetes manifests
   - name: 'gcr.io/cloud-builders/kubectl'
     args: ['apply', '-f', 'k8s/']
 
 images:
-  - gcr.io/analog-vault-398008/frontend:latest
-  - gcr.io/analog-vault-398008/backend:latest
+  - europe-north1-docker.pkg.dev/skavaair/skavaair-frontend/frontend:latest
+  - europe-north1-docker.pkg.dev/skavaair/skavaair-backend/backend:latest

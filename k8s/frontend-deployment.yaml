@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: gcr.io/smiling-landing-457908-k9/frontend:latest
+          image: europe-north1-docker.pkg.dev/skavaair/frontend:latest
           ports:
             - containerPort: 80

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: gcr.io/smiling-landing-457908-k9/backend:latest
+          image: europe-north1-docker.pkg.dev/skavaair/backend:latest
           ports:
             - containerPort: 5000
           env:
