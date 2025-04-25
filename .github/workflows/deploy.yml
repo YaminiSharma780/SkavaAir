@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -22,6 +22,9 @@ jobs:
       - name: Install gke-gcloud-auth-plugin
         run: |
           gcloud components install gke-gcloud-auth-plugin
+
+      - name: Authenticate with gcloud
+        run: gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
 
       - name: Get GKE credentials
         run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
