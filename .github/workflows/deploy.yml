@@ -3,34 +3,34 @@ name: Deploy to GKE
 on:
   push:
     branches:
-      - master
+      - master  # Trigger on pushes to master branch (you can change this if necessary)
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: 'read'
-      id-token: 'write'  # Needed for Workload Identity Federation
-
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: skavaair  # Your Google Cloud project ID
+          credentials_json: ${{ secrets.GCP_SA_KEY }}  # Your service account key stored in GitHub secrets
 
-    - name: Set up gcloud CLI
-      uses: google-github-actions/setup-gcloud@v1
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
 
-    - name: Configure kubectl
-      run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
+      - name: Get GKE credentials
+        run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
 
-    - name: Deploy frontend and backend
-      run: |
-        kubectl apply -f k8s/frontend-deployment.yaml
-        kubectl apply -f k8s/frontend-service.yaml
-        kubectl apply -f k8s/backend-deployment.yaml
-        kubectl apply -f k8s/backend-service.yaml
+      - name: Deploy frontend
+        run: kubectl apply -f k8s/frontend-deployment.yaml
+
+      - name: Deploy backend
+        run: kubectl apply -f k8s/backend-deployment.yaml
+
+      - name: Expose services
+        run: kubectl apply -f k8s/frontend-service.yaml && kubectl apply -f k8s/backend-service.yaml
