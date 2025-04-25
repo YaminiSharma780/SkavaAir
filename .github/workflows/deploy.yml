@@ -17,7 +17,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: skavaair  # Your Google Cloud project ID
-          credentials_json: ${{ secrets.GCP_SA_NEW_KEY }}  # Your new service account key stored in GitHub secrets
+          credentials_json: ${{ secrets.GCP_SA_NEW_KEY }}  # Your service account key stored in GitHub secrets
 
       - name: Get GKE credentials
         run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
