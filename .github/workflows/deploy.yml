@@ -25,7 +25,7 @@ jobs:
 
       - name: Authenticate with gcloud using the service account key
         run: |
-          echo "${{ secrets.GCP_SA_NEW_KEY }}" | base64 --decode > /tmp/gcp-key.json
+          echo "${{ secrets.GCP_SA_NEW_KEY }}" > /tmp/gcp-key.json
           cat /tmp/gcp-key.json  # Debug step to verify key content
           gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
 
