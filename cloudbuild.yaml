@@ -4,21 +4,21 @@ options:
 steps:
   # Build frontend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/frontend:latest', './frontend']
+    args: ['build', '-t', 'gcr.io/analog-vault-398008/frontend:latest', './frontend']
 
   # Build backend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/backend:latest', './backend']
+    args: ['build', '-t', 'gcr.io/analog-vault-398008/backend:latest', './backend']
 
   # Push frontend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/frontend:latest']
+    args: ['push', 'gcr.io/analog-vault-398008/frontend:latest']
 
   # Push backend image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/backend:latest']
+    args: ['push', 'gcr.io/analog-vault-398008/backend:latest']
 
-  # Set up kubectl
+  # Set up kubectl with GKE credentials
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
@@ -26,12 +26,12 @@ steps:
       - |
         gcloud container clusters get-credentials skavaair-cluster \
           --region europe-north1 \
-          --project $PROJECT_ID
+          --project analog-vault-398008
 
-  # Deploy to Kubernetes
+  # Deploy Kubernetes manifests
   - name: 'gcr.io/cloud-builders/kubectl'
     args: ['apply', '-f', 'k8s/']
 
 images:
-  - gcr.io/$PROJECT_ID/frontend:latest
-  - gcr.io/$PROJECT_ID/backend:latest
+  - gcr.io/analog-vault-398008/frontend:latest
+  - gcr.io/analog-vault-398008/backend:latest
