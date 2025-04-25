@@ -1,0 +1,40 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: skavaair
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # Set up kubectl
+      - name: Set up kubectl
+        run: |
+          gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
+
+      # Apply Kubernetes manifests for frontend and backend
+      - name: Deploy frontend
+        run: kubectl apply -f k8s/frontend-deployment.yaml -f k8s/frontend-service.yaml
+
+      - name: Deploy backend
+        run: kubectl apply -f k8s/backend-deployment.yaml -f k8s/backend-service.yaml
+
+      # Verify the deployments
+      - name: Verify Deployments
+        run: |
+          kubectl rollout status deployment/frontend
+          kubectl rollout status deployment/backend
