@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: europe-north1-docker.pkg.dev/skavaair/frontend:latest
+          image: europe-north1-docker.pkg.dev/skavaair/frontend/frontend:latest
           ports:
             - containerPort: 80

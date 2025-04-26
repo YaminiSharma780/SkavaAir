@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: europe-north1-docker.pkg.dev/skavaair/backend:latest
+          image: europe-north1-docker.pkg.dev/skavaair/backend/backend:latest
           ports:
             - containerPort: 5000
           env:
