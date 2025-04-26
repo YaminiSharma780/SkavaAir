@@ -46,6 +46,11 @@ jobs:
           export CLOUDSDK_COMPUTE_ZONE=europe-north1-a
           export CLOUDSDK_CONTAINER_CLUSTER=skavaair-kube-cluster
 
+      - name: Verify kubectl setup
+        run: |
+          kubectl config view
+          kubectl get nodes
+
       - name: Deploy to GKE
         run: |
           kubectl apply -f k8s/
