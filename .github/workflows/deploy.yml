@@ -13,22 +13,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Google Cloud SDK
+      - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: skavaair
-          export_default_credentials: true
+          install_components: 'kubectl'
 
       - name: Authenticate to GCP
         run: |
-          echo '${{ secrets.GCP_SA_KEY }}' | jq '.' > ${{ github.workspace }}/gcp-key.json
+          echo "${{ secrets.GCP_SA_KEY }}" | tr '\\n' '\n' > ${{ github.workspace }}/gcp-key.json
           gcloud auth activate-service-account --key-file=${{ github.workspace }}/gcp-key.json
 
-      - name: Set up GKE credentials
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker --quiet
+
+      - name: Build and Push Docker Images
         run: |
-          gcloud container clusters get-credentials skavaair-kube-cluster \
-            --zone us-central1-a \
-            --project skavaair
+          docker build -t gcr.io/skavaair/frontend ./frontend
+          docker build -t gcr.io/skavaair/backend ./backend
+          docker push gcr.io/skavaair/frontend
+          docker push gcr.io/skavaair/backend
+
+      - name: Set up GKE credentials
+        run: gcloud container clusters get-credentials skavaair-kube-cluster --zone us-central1-a --project skavaair
 
       - name: Deploy to GKE
         run: |
