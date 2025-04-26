@@ -9,45 +9,45 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      PROJECT_ID: skavaair
-      REGION: europe-north1
-      CLUSTER: skavaair-kube-cluster
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 🔐 Auth via GitHub action (safe + no manual gcloud config)
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
-      # ☁️ Set up gcloud + kubectl
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ env.PROJECT_ID }}
+          project_id: skavaair
           install_components: 'kubectl'
 
-      # 🎯 Fetch GKE credentials (this fixes the "no cluster set" issue)
-      - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v1
-        with:
-          cluster_name: ${{ env.CLUSTER }}
-          location: ${{ env.REGION }}
-          project_id: ${{ env.PROJECT_ID }}
+      - name: Authenticate to GCP
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > ${{ github.workspace }}/gcp-key.json
+          gcloud auth activate-service-account --key-file=${{ github.workspace }}/gcp-key.json
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker --quiet
 
       - name: Build and Push Docker Images
         run: |
-          gcloud auth configure-docker --quiet
-          docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend ./frontend
-          docker build -t gcr.io/${{ env.PROJECT_ID }}/backend ./backend
-          docker push gcr.io/${{ env.PROJECT_ID }}/frontend
-          docker push gcr.io/${{ env.PROJECT_ID }}/backend
+          docker build -t gcr.io/skavaair/frontend ./frontend
+          docker build -t gcr.io/skavaair/backend ./backend
+          docker push gcr.io/skavaair/frontend
+          docker push gcr.io/skavaair/backend
+
+      - name: Set up GKE credentials and context manually
+        run: |
+          gcloud container clusters get-credentials skavaair-kube-cluster \
+            --region europe-north1 \
+            --project skavaair
+
+          # Explicitly set the context (helps avoid "no cluster is set" error)
+          kubectl config use-context gke_skavaair_europe-north1_skavaair-kube-cluster
+
+      - name: Verify kubectl context
+        run: |
+          echo "Current kubectl context:"
+          kubectl config current-context
 
       - name: Deploy to GKE
         run: |
           kubectl apply -f k8s/
-          kubectl get all
