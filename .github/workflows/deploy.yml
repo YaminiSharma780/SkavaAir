@@ -19,6 +19,11 @@ jobs:
           project_id: skavaair
           install_components: 'kubectl'
 
+      - name: Debug the GCP_SA_KEY secret
+        run: |
+          echo "GCP_SA_KEY length: ${#GCP_SA_KEY}"
+          echo "First 100 characters of GCP_SA_KEY: ${GCP_SA_KEY:0:100}"
+
       - name: Authenticate to GCP
         run: |
           echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > ${{ github.workspace }}/gcp-key.json
