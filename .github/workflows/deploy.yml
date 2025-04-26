@@ -41,9 +41,9 @@ jobs:
 
       - name: Set up GKE credentials
         run: | 
-          CLOUDSDK_COMPUTE_REGION="europe-north1"
-          CLOUDSDK_COMPUTE_ZONE="europe-north1-a"
-          CLOUDSDK_CONTAINER_CLUSTER="skavaair-kube-cluster"
+          export CLOUDSDK_COMPUTE_REGION="europe-north1"
+          export CLOUDSDK_COMPUTE_ZONE="europe-north1-a"
+          export CLOUDSDK_CONTAINER_CLUSTER="skavaair-kube-cluster"
           gcloud container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER --region $CLOUDSDK_COMPUTE_REGION --project skavaair
 
       - name: Deploy to GKE
