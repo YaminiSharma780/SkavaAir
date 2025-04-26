@@ -43,6 +43,7 @@ jobs:
         run: | 
           gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
           export CLOUDSDK_COMPUTE_REGION=europe-north1
+          export CLOUDSDK_COMPUTE_ZONE=europe-north1-a
           export CLOUDSDK_CONTAINER_CLUSTER=skavaair-kube-cluster
 
       - name: Deploy to GKE
