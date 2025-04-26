@@ -40,7 +40,7 @@ jobs:
           docker push gcr.io/skavaair/backend
 
       - name: Set up GKE credentials
-        run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1-a --project skavaair
+        run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
 
       - name: Deploy to GKE
         run: |
