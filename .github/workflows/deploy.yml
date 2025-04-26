@@ -3,40 +3,48 @@ name: Deploy to GKE
 on:
   push:
     branches:
-      - master  # Trigger on pushes to master branch (you can change this if necessary)
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      PROJECT_ID: skavaair
+      REGION: europe-north1
+      CLUSTER: skavaair-kube-cluster
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set up Google Cloud SDK
+      - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: skavaair  # Your Google Cloud project ID
-          credentials_json: ${{ secrets.GCP_SA_NEW_KEY }}  # Your service account key stored in GitHub secrets
+          project_id: ${{ env.PROJECT_ID }}
+          install_components: 'kubectl'
 
-      - name: Install gke-gcloud-auth-plugin
+      - name: Authenticate to GCP
         run: |
-          gcloud components install gke-gcloud-auth-plugin || true
+          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > ${{ github.workspace }}/gcp-key.json
+          gcloud auth activate-service-account --key-file=${{ github.workspace }}/gcp-key.json
 
-      - name: Authenticate with gcloud using the service account key
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker --quiet
+
+      - name: Build and Push Docker Images
         run: |
-          echo "${{ secrets.GCP_SA_NEW_KEY }}" > /tmp/gcp-key.json
-          cat /tmp/gcp-key.json  # Debug step to verify key content
-          gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend ./frontend
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/backend ./backend
+          docker push gcr.io/${{ env.PROJECT_ID }}/frontend
+          docker push gcr.io/${{ env.PROJECT_ID }}/backend
 
-      - name: Get GKE credentials
-        run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
+      - name: Set GKE Credentials
+        run: |
+          gcloud container clusters get-credentials $CLUSTER \
+            --region $REGION \
+            --project $PROJECT_ID
 
-      - name: Deploy frontend
-        run: kubectl apply -f k8s/frontend-deployment.yaml
-
-      - name: Deploy backend
-        run: kubectl apply -f k8s/backend-deployment.yaml
-
-      - name: Expose services
-        run: kubectl apply -f k8s/frontend-service.yaml && kubectl apply -f k8s/backend-service.yaml
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f k8s/
