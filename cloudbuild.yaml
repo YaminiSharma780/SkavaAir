@@ -26,7 +26,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'europe-north1-docker.pkg.dev/skavaair/backend/backend:latest']
 
-  # Set up kubectl with GKE credentials
+  # Set up kubectl with GKE credentials and deploy
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
@@ -34,11 +34,8 @@ steps:
       - |
         gcloud container clusters get-credentials skavaair-kube-cluster \
           --region europe-north1 \
-          --project skavaair
-
-  # Deploy Kubernetes manifests
-  - name: 'gcr.io/cloud-builders/kubectl'
-    args: ['apply', '-f', 'k8s/']
+          --project skavaair && \
+        kubectl apply -f k8s/
 
 images:
   - europe-north1-docker.pkg.dev/skavaair/frontend/frontend:latest
