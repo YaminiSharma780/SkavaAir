@@ -21,9 +21,12 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         export_default_credentials: true
 
+    - name: Authenticate Docker for Artifact Registry
+      run: |
+        gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://europe-north1-docker.pkg.dev
+  
     - name: Build and Push Docker images
       run: |
-        gcloud auth configure-docker europe-north1-docker.pkg.dev
         docker build -t europe-north1-docker.pkg.dev/skavaair/frontend/frontend:latest ./frontend
         docker build -t europe-north1-docker.pkg.dev/skavaair/backend/backend:latest ./backend
         docker push europe-north1-docker.pkg.dev/skavaair/frontend/frontend:latest
