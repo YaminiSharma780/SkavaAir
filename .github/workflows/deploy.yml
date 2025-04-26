@@ -17,14 +17,17 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: skavaair  # Your Google Cloud project ID
-          credentials_json: ${{ secrets.GCP_SA_KEY }}  # Your service account key stored in GitHub secrets
+          credentials_json: ${{ secrets.GCP_SA_NEW_KEY }}  # Your service account key stored in GitHub secrets
 
       - name: Install gke-gcloud-auth-plugin
         run: |
-          gcloud components install gke-gcloud-auth-plugin
+          gcloud components install gke-gcloud-auth-plugin || true
 
-      - name: Authenticate with gcloud
-        run: gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
+      - name: Authenticate with gcloud using the service account key
+        run: |
+          echo "${{ secrets.GCP_SA_NEW_KEY }}" > /tmp/gcp-key.json
+          cat /tmp/gcp-key.json  # Debug step to verify key content
+          gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
 
       - name: Get GKE credentials
         run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
