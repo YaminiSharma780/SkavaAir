@@ -9,6 +9,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      PROJECT_ID: skavaair
+      REGION: europe-north1
+      CLUSTER: skavaair-kube-cluster
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -16,9 +21,10 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: skavaair
+          project_id: ${{ env.PROJECT_ID }}
           install_components: 'kubectl'
 
+      # KEEP THIS AUTH SECTION UNTOUCHED
       - name: Debug the GCP_SA_KEY secret
         run: |
           echo "GCP_SA_KEY length: ${#GCP_SA_KEY}"
@@ -34,18 +40,15 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          docker build -t gcr.io/skavaair/frontend ./frontend
-          docker build -t gcr.io/skavaair/backend ./backend
-          docker push gcr.io/skavaair/frontend
-          docker push gcr.io/skavaair/backend
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend ./frontend
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/backend ./backend
+          docker push gcr.io/${{ env.PROJECT_ID }}/frontend
+          docker push gcr.io/${{ env.PROJECT_ID }}/backend
 
-      - name: Set up GKE credentials
-        run: | 
-          export CLOUDSDK_COMPUTE_REGION="europe-north1"
-          export CLOUDSDK_COMPUTE_ZONE="europe-north1-a"
-          export CLOUDSDK_CONTAINER_CLUSTER="skavaair-kube-cluster"
-          gcloud container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER --region $CLOUDSDK_COMPUTE_REGION --project skavaair
+      - name: Get GKE credentials (regional cluster)
+        run: |
+          gcloud container clusters get-credentials $CLUSTER --region $REGION --project $PROJECT_ID
+          kubectl config current-context
 
       - name: Deploy to GKE
-        run: |
-          kubectl apply -f k8s/
+        run: kubectl apply -f k8s/
