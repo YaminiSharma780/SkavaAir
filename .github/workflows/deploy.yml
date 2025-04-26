@@ -8,6 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      CLOUDSDK_COMPUTE_REGION: europe-north1
+      CLOUDSDK_CONTAINER_CLUSTER: skavaair-kube-cluster
+      GOOGLE_PROJECT: skavaair
 
     steps:
       - name: Checkout code
@@ -21,7 +25,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: skavaair
+          project_id: ${{ env.GOOGLE_PROJECT }}
           install_components: 'kubectl'
 
       - name: Configure Docker for GCR
@@ -29,14 +33,14 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          docker build -t gcr.io/skavaair/frontend ./frontend
-          docker build -t gcr.io/skavaair/backend ./backend
-          docker push gcr.io/skavaair/frontend
-          docker push gcr.io/skavaair/backend
+          docker build -t gcr.io/${{ env.GOOGLE_PROJECT }}/frontend ./frontend
+          docker build -t gcr.io/${{ env.GOOGLE_PROJECT }}/backend ./backend
+          docker push gcr.io/${{ env.GOOGLE_PROJECT }}/frontend
+          docker push gcr.io/${{ env.GOOGLE_PROJECT }}/backend
 
       - name: Get GKE credentials
         run: |
-          gcloud container clusters get-credentials skavaair-kube-cluster --region europe-north1 --project skavaair
+          gcloud container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER --region $CLOUDSDK_COMPUTE_REGION --project $GOOGLE_PROJECT
 
       - name: Deploy to GKE
         run: |
