@@ -9,11 +9,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      PROJECT_ID: skavaair
-      REGION: europe-north1
-      CLUSTER: skavaair-kube-cluster
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,29 +16,28 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ env.PROJECT_ID }}
+          project_id: skavaair
           install_components: 'kubectl'
 
       - name: Authenticate to GCP
         run: |
           echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > ${{ github.workspace }}/gcp-key.json
           gcloud auth activate-service-account --key-file=${{ github.workspace }}/gcp-key.json
+          gcloud config set project skavaair
 
       - name: Configure Docker for GCR
         run: gcloud auth configure-docker --quiet
 
       - name: Build and Push Docker Images
         run: |
-          docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend ./frontend
-          docker build -t gcr.io/${{ env.PROJECT_ID }}/backend ./backend
-          docker push gcr.io/${{ env.PROJECT_ID }}/frontend
-          docker push gcr.io/${{ env.PROJECT_ID }}/backend
+          docker build -t gcr.io/skavaair/frontend ./frontend
+          docker build -t gcr.io/skavaair/backend ./backend
+          docker push gcr.io/skavaair/frontend
+          docker push gcr.io/skavaair/backend
 
-      - name: Set GKE Credentials
+      - name: Get GKE credentials
         run: |
-          gcloud container clusters get-credentials $CLUSTER \
-            --region $REGION \
-            --project $PROJECT_ID
+          gcloud container clusters get-credentials skavaair-kube-cluster --region europe-north1 --project skavaair
 
       - name: Deploy to GKE
         run: |
