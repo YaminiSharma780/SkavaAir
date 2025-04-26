@@ -19,14 +19,9 @@ jobs:
           project_id: skavaair
           install_components: 'kubectl'
 
-      - name: Debug the GCP_SA_KEY secret
-        run: |
-          echo "GCP_SA_KEY length: ${#GCP_SA_KEY}"
-          echo "First 100 characters of GCP_SA_KEY: ${GCP_SA_KEY:0:100}"
-
       - name: Authenticate to GCP
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > ${{ github.workspace }}/gcp-key.json
+          echo "${{ secrets.GCP_SA_KEY }}" | tr '\\n' '\n' > ${{ github.workspace }}/gcp-key.json
           gcloud auth activate-service-account --key-file=${{ github.workspace }}/gcp-key.json
 
       - name: Configure Docker for GCR
@@ -40,7 +35,10 @@ jobs:
           docker push gcr.io/skavaair/backend
 
       - name: Set up GKE credentials
-        run: gcloud container clusters get-credentials skavaair-kube-cluster --zone europe-north1 --project skavaair
+        run: |
+          gcloud container clusters get-credentials skavaair-kube-cluster --region europe-north1 --project skavaair
+          export CLOUDSDK_COMPUTE_REGION=europe-north1
+          export CLOUDSDK_CONTAINER_CLUSTER=skavaair-kube-cluster
 
       - name: Deploy to GKE
         run: |
