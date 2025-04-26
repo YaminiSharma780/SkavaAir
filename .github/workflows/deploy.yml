@@ -18,37 +18,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 🔐 Auth via GitHub action (safe + no manual gcloud config)
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      # ☁️ Set up gcloud + kubectl
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ env.PROJECT_ID }}
           install_components: 'kubectl'
 
-      # KEEP THIS AUTH SECTION UNTOUCHED
-      - name: Debug the GCP_SA_KEY secret
-        run: |
-          echo "GCP_SA_KEY length: ${#GCP_SA_KEY}"
-          echo "First 100 characters of GCP_SA_KEY: ${GCP_SA_KEY:0:100}"
-
-      - name: Authenticate to GCP
-        run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > ${{ github.workspace }}/gcp-key.json
-          gcloud auth activate-service-account --key-file=${{ github.workspace }}/gcp-key.json
-
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker --quiet
+      # 🎯 Fetch GKE credentials (this fixes the "no cluster set" issue)
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ env.CLUSTER }}
+          location: ${{ env.REGION }}
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Build and Push Docker Images
         run: |
+          gcloud auth configure-docker --quiet
           docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend ./frontend
           docker build -t gcr.io/${{ env.PROJECT_ID }}/backend ./backend
           docker push gcr.io/${{ env.PROJECT_ID }}/frontend
           docker push gcr.io/${{ env.PROJECT_ID }}/backend
 
-      - name: Get GKE credentials (regional cluster)
-        run: |
-          gcloud container clusters get-credentials $CLUSTER --region $REGION --project $PROJECT_ID
-          kubectl config current-context
-
       - name: Deploy to GKE
-        run: kubectl apply -f k8s/
+        run: |
+          kubectl apply -f k8s/
+          kubectl get all
