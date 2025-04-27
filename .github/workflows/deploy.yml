@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy to GKE
     runs-on: ubuntu-latest
 
     steps:
@@ -25,15 +25,16 @@ jobs:
           project_id: skavaair
           install_components: 'gke-gcloud-auth-plugin'
 
-      - name: Configure Docker authentication
-        run: gcloud auth configure-docker europe-north1-docker.pkg.dev
+      - name: Authenticate Docker with Artifact Registry
+        run: |
+          gcloud auth configure-docker europe-north1-docker.pkg.dev
 
-      - name: Build and push Frontend Docker image
+      - name: Build and Push Frontend Docker Image
         run: |
           docker build -t europe-north1-docker.pkg.dev/skavaair/frontend/frontend:latest ./frontend
           docker push europe-north1-docker.pkg.dev/skavaair/frontend/frontend:latest
 
-      - name: Build and push Backend Docker image
+      - name: Build and Push Backend Docker Image
         run: |
           docker build -t europe-north1-docker.pkg.dev/skavaair/backend/backend:latest ./backend
           docker push europe-north1-docker.pkg.dev/skavaair/backend/backend:latest
@@ -42,6 +43,17 @@ jobs:
         run: |
           gcloud container clusters get-credentials skavaair-kube-cluster --region europe-north1
 
-      - name: Deploy to Kubernetes
+      - name: Deploy Frontend to Kubernetes
         run: |
-          kubectl apply -f k8s
+          kubectl apply -f k8s/frontend-deployment.yaml
+          kubectl apply -f k8s/frontend-service.yaml
+
+      - name: Deploy Backend to Kubernetes
+        run: |
+          kubectl apply -f k8s/backend-deployment.yaml
+          kubectl apply -f k8s/backend-service.yaml
+
+      - name: Deploy MongoDB to Kubernetes
+        run: |
+          kubectl apply -f k8s/mongo-deployment.yaml
+          kubectl apply -f k8s/mongo-service.yaml
