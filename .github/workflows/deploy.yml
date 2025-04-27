@@ -65,3 +65,7 @@ jobs:
       - name: Restart Backend Deployment
         run: |
           kubectl rollout restart deployment backend-deployment
+          
+      - name: Verify Pods Status
+        run: |
+          kubectl get pods
