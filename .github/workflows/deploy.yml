@@ -57,3 +57,11 @@ jobs:
         run: |
           kubectl apply -f k8s/mongo-deployment.yaml
           kubectl apply -f k8s/mongo-service.yaml
+
+      - name: Restart Frontend Deployment
+        run: |
+          kubectl rollout restart deployment frontend-deployment
+
+      - name: Restart Backend Deployment
+        run: |
+          kubectl rollout restart deployment backend-deployment
